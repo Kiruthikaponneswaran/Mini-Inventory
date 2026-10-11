@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 
 import { PAGE_SIZE } from "../api/products";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Layout } from "../components/Layout";
+import { Modal } from "../components/Modal";
 import { Pagination } from "../components/Pagination";
+import { ProductForm } from "../components/ProductForm";
 import { ProductTable } from "../components/ProductTable";
 import { EmptyState, ErrorState, Spinner } from "../components/States";
 import { useDebounce } from "../hooks/useDebounce";
-import { useCategories, useProducts } from "../hooks/useProducts";
+import { useCategories, useDeleteProduct, useProducts, useSaveProduct } from "../hooks/useProducts";
 import { getErrorMessage, getStatus } from "../lib/errors";
-import type { Product } from "../types";
+import type { Product, ProductPayload } from "../types";
 
 export function ProductsPage() {
   const [searchInput, setSearchInput] = useState("");
@@ -16,20 +19,53 @@ export function ProductsPage() {
   const [category, setCategory] = useState("");
   const [page, setPage] = useState(1);
 
-  // Row actions are wired up in the next commit (form + delete confirmation).
-  const [, setEditing] = useState<Product | "new" | null>(null);
-  const [, setDeleting] = useState<Product | null>(null);
+  const [editing, setEditing] = useState<Product | "new" | null>(null);
+  const [deleting, setDeleting] = useState<Product | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   // A new search or filter always starts from page 1.
   useEffect(() => setPage(1), [search, category]);
 
   const categories = useCategories();
   const products = useProducts({ page, search, category });
+  const save = useSaveProduct();
+  const remove = useDeleteProduct();
+
+  // Auto-dismiss the success toast.
+  useEffect(() => {
+    if (!notice) return;
+    const id = setTimeout(() => setNotice(null), 3500);
+    return () => clearTimeout(id);
+  }, [notice]);
 
   // e.g. the last item on the last page was removed elsewhere: fall back instead of showing an error.
   useEffect(() => {
     if (products.isError && getStatus(products.error) === 404 && page > 1) setPage(page - 1);
   }, [products.isError, products.error, page]);
+
+  const closeEditor = () => {
+    setEditing(null);
+    save.reset();
+  };
+
+  const handleSave = async (payload: ProductPayload) => {
+    await save.mutateAsync({ id: editing !== "new" && editing ? editing.id : undefined, payload });
+    setNotice(editing === "new" ? "Product added." : "Product updated.");
+    setEditing(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deleting) return;
+    const onlyRowOnPage = products.data?.results.length === 1;
+    await remove.mutateAsync(deleting.id).then(
+      () => {
+        setNotice(`"${deleting.name}" deleted.`);
+        setDeleting(null);
+        if (onlyRowOnPage && page > 1) setPage(page - 1); // don't strand the user on an empty page
+      },
+      () => undefined, // error is shown inside the dialog via remove.error
+    );
+  };
 
   const hasFilters = search !== "" || category !== "";
   const clearFilters = () => {
@@ -125,6 +161,43 @@ export function ProductsPage() {
       )}
 
       <section className="card">{content}</section>
+
+      {editing && (
+        <Modal title={editing === "new" ? "Add product" : "Edit product"} onClose={closeEditor}>
+          {categories.data ? (
+            <ProductForm
+              categories={categories.data}
+              product={editing === "new" ? undefined : editing}
+              onSubmit={handleSave}
+              onCancel={closeEditor}
+            />
+          ) : (
+            <p className="muted">Categories are unavailable, so a product can't be saved right now.</p>
+          )}
+        </Modal>
+      )}
+
+      {deleting && (
+        <ConfirmDialog
+          title="Delete product?"
+          confirmLabel="Delete"
+          busy={remove.isPending}
+          error={remove.isError ? getErrorMessage(remove.error) : null}
+          onConfirm={handleDelete}
+          onCancel={() => {
+            setDeleting(null);
+            remove.reset();
+          }}
+        >
+          <strong>{deleting.name}</strong> will be permanently removed. This can't be undone.
+        </ConfirmDialog>
+      )}
+
+      {notice && (
+        <div className="alert alert-success toast" role="status">
+          {notice}
+        </div>
+      )}
     </Layout>
   );
 }
