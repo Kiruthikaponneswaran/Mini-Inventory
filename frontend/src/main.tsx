@@ -7,7 +7,7 @@ import App from "./App";
 import { AuthProvider } from "./auth/AuthContext";
 import { getStatus } from "./lib/errors";
 import "./index.css";
-
+import { LoadingBar } from "./components/LoadingBar";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -25,6 +25,7 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
+       <LoadingBar />
       <BrowserRouter>
         <AuthProvider>
           <App />
