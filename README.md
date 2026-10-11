@@ -1,14 +1,18 @@
 # Mini Inventory System
+
 **Live demo:** https://mini-inventory-sigma.vercel.app (login: `demo` / `demo12345`)
 The API runs on Render's free tier, so the first request may take about a minute to wake up. Data resets on restart.
 
 A small inventory manager: **Django REST Framework** API + **React (TypeScript)** SPA.
 
 - Products CRUD with pagination, category filter and debounced name search
-- JWT authentication
+- JWT authentication, with a show/hide password toggle on the login page
 - Validation on both sides, with server errors mapped back onto the form fields
-- Loading / error / empty states everywhere, responsive layout (table on desktop, cards on mobile)
-- Bonus: Docker Compose, backend tests (pytest), frontend tests (Vitest + React Testing Library), TanStack Query, GitHub Actions CI
+- Loading / error / empty states everywhere, plus a global loading bar for any API activity
+- Responsive layout (table on desktop, cards on mobile)
+- Prices shown in AED and dates shown in UAE time (Asia/Dubai)
+- Excel export of the filtered product list (client-side, `exceljs`)
+- Bonus: Docker Compose, backend tests (pytest), frontend tests (Vitest + React Testing Library), TanStack Query, GitHub Actions CI, live deployment
 
 ## Test login
 
@@ -39,14 +43,14 @@ The backend container runs migrations and seeds demo data on start (disable with
 
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
 python manage.py migrate
 python manage.py seed            # demo data + demo user (use --reset to wipe first)
 python manage.py runserver       # http://localhost:8000
 ```
 
-**Frontend** (Node 20+):
+**Frontend** (Node 22+):
 
 ```bash
 cd frontend
@@ -56,6 +60,8 @@ npm run dev                      # http://localhost:5173
 
 In dev, Vite proxies `/api` to `localhost:8000`, so there is no CORS configuration to fiddle with.
 
+> The frontend test tooling (Vitest + jsdom) needs a recent Node. On older versions, `npm test` fails with `webidl.util.markAsUncloneable is not a function`.
+
 ### Tests
 
 ```bash
@@ -63,6 +69,13 @@ cd backend  && pytest            # 25 tests
 cd frontend && npm test          # 35 tests
 cd frontend && npm run typecheck
 ```
+
+---
+
+## Deployment
+
+- **Frontend:** Vercel (static build of the Vite app), redeployed on every push to `main`.
+- **API:** Render free tier. It sleeps when idle, which is why the first request can be slow.
 
 ---
 
@@ -91,9 +104,9 @@ backend/
 frontend/src/
   api/               axios client (+ token refresh), endpoint functions
   auth/              AuthContext, ProtectedRoute
-  components/        ProductTable, ProductForm, Modal, ConfirmDialog, Pagination, States
+  components/        ProductTable, ProductForm, Modal, ConfirmDialog, Pagination, LoadingBar, States
   hooks/             useDebounce, TanStack Query hooks
-  lib/               validation (zod), error parsing, formatting
+  lib/               validation (zod), error parsing, formatting (AED, UAE time), Excel export
   pages/             LoginPage, ProductsPage
 docker-compose.yml   db (Postgres) + backend (gunicorn) + frontend (nginx)
 ```
@@ -115,22 +128,27 @@ docker-compose.yml   db (Postgres) + backend (gunicorn) + frontend (nginx)
 
 **Frontend**
 - **TanStack Query** for server state: caching, request de-duplication, and `keepPreviousData` so the table doesn't flash a spinner while paging or typing. Mutations invalidate the `["products"]` key.
+- **Global loading bar** driven by TanStack Query's `useIsFetching` / `useIsMutating`, so every load, page change, search and save shows progress without touching each request.
 - **Debounce in a small `useDebounce` hook** (400 ms). The input is controlled and instant; only the debounced value feeds the query key. Changing search or category resets to page 1.
 - **react-hook-form + zod** for the form. Price/stock stay strings in the form (instead of `type="number"`) so *I* control the error messages and avoid browser quirks, and convert to numbers only when building the payload.
 - **Server errors are mapped back onto the fields** (`setError`), so rules enforced only by the API still show up inline.
 - **Axios interceptor with single-flight token refresh**: on a 401 it refreshes once, retries the request, and if refresh fails it logs the user out. Concurrent 401s share one refresh call.
 - **Responsive without duplicate markup**: one semantic `<table>` that CSS turns into cards below 720px, using `data-label` for captions.
-- **Small hand-written `Modal`** (focus trap, Esc, focus restore, `role="dialog"`/`alertdialog`) instead of a UI-kit dependency, to keep the bundle small (~150 kB gzipped total).
+- **Small hand-written `Modal`** (focus trap, Esc, focus restore, `role="dialog"`/`alertdialog`) instead of a UI-kit dependency, to keep the bundle small.
+- **Currency and time via `Intl`.** Prices use `Intl.NumberFormat` with AED, and dates use `Intl.DateTimeFormat` fixed to `Asia/Dubai`, so every viewer sees the same values. Only the display changes; the API still stores plain decimals and UTC timestamps.
+- **Client-side Excel export.** The button fetches every page of the current filtered result (same search and category as the table, 100 rows per request), builds an `.xlsx` in the browser with `exceljs`, and downloads it. It needs no backend change, reuses the authenticated axios client, and the library is loaded only when the button is clicked so it doesn't add to the initial bundle.
+- **Accessible password toggle.** The eye button is a real `<button type="button">` with a changing `aria-label` and `aria-pressed`, so it works by keyboard and with screen readers.
 - **Edge cases handled:** deleting the last row of a page moves back a page; a stale page number (404) falls back; delete failures show inside the confirmation dialog; the cache is cleared on logout.
 
 ## What I'd improve with more time
 
+- **Server-side export.** The Excel export runs in the browser, which is fine for hundreds or a few thousand rows. For very large tables I'd move it to a backend endpoint (streamed `.xlsx` or CSV) that reuses the same filters.
+- **Tests for the export** (the paginated fetch and the workbook contents), and a Playwright E2E test for the full login → CRUD → export flow, plus coverage reporting in CI.
 - **Token storage.** Tokens are in `localStorage`, which is simple but readable by any XSS. I'd move the refresh token to an `httpOnly`, `SameSite` cookie, and add refresh-token rotation/blacklisting on logout.
-- **Optimistic updates** for delete/edit, plus a "undo" toast.
+- **Cold-start feedback.** A "server is waking up" message on the login page when the free-tier API is slow to respond.
+- **Optimistic updates** for delete/edit, plus an "undo" toast.
 - **Soft delete** (or archiving via `is_active`) instead of hard delete, and an audit trail of who changed stock.
 - **Roles/permissions** (viewer vs. editor), and per-user data if this became multi-tenant.
 - **Sortable columns** in the UI (the API already supports `?ordering=`), filter by active/inactive, and persisting filters/page in the URL.
 - **Category management UI**, and a unique constraint on product name per category.
-- **E2E tests** (Playwright) for the full login → CRUD flow, plus coverage reporting in CI.
 - **Production hardening:** HTTPS settings (HSTS, secure cookies), real secrets management, structured logging, and a health-check endpoint.
-
