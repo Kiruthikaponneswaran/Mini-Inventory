@@ -134,8 +134,23 @@ async function handleExport() {
 <div className="page-head">
   <h1>Products</h1>
   <div className="head-actions">
-    <button className="btn" onClick={handleExport} disabled={exporting}>
-      {exporting ? "Exporting…" : "Export Excel"}
+    <button
+      type="button"
+      className="btn btn-icon"
+      onClick={handleExport}
+      disabled={exporting}
+      aria-label="Export Excel"
+      data-tooltip={exporting ? "Exporting…" : "Export Excel"}
+    >
+      {exporting ? (
+        <span className="spinner spinner-sm" aria-hidden="true" />
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+      )}
     </button>
     <button className="btn btn-primary" onClick={() => setEditing("new")}>
       + Add product
