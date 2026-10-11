@@ -2,7 +2,13 @@
 
 **Live demo:** https://mini-inventory-sigma.vercel.app (login: `demo` / `demo12345`)
 The API runs on Render's free tier, so the first request may take about a minute to wake up. Data resets on restart.
+| Login | Products |
+|-------|----------|
+| ![Login page](docs/login.webp) | ![Products page](docs/product.webp) | ![Add product form](docs/add.webp) |
 
+| Add product | Mobile |
+|-------------|--------|
+| ![Mobile view](docs/mobile.webp) |
 A small inventory manager: **Django REST Framework** API + **React (TypeScript)** SPA.
 
 - Products CRUD with pagination, category filter and debounced name search
