@@ -87,7 +87,8 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--da
 .fade { opacity: .55; transition: opacity .15s; }
 
 /* table */
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow: auto; max-height: max(240px, calc(100vh - 340px)); }
+.table thead th { position: sticky; top: 0; z-index: 1; background: var(--surface); box-shadow: 0 1px 0 var(--border); }
 .table { width: 100%; border-collapse: collapse; }
 .table th, .table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .table th { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
@@ -151,6 +152,7 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--da
   .table .actions .btn + .btn { margin-left: 0; }
   .page-head { flex-wrap: wrap; }
 .head-actions { margin-left: auto; }
+  .table-wrap { max-height: none; }
 }
 .loading-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100; overflow: hidden; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .loading-bar.active { opacity: 1; }

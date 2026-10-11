@@ -139,16 +139,32 @@ docker-compose.yml   db (Postgres) + backend (gunicorn) + frontend (nginx)
 - **Client-side Excel export.** The button fetches every page of the current filtered result (same search and category as the table, 100 rows per request), builds an `.xlsx` in the browser with `exceljs`, and downloads it. It needs no backend change, reuses the authenticated axios client, and the library is loaded only when the button is clicked so it doesn't add to the initial bundle.
 - **Accessible password toggle.** The eye button is a real `<button type="button">` with a changing `aria-label` and `aria-pressed`, so it works by keyboard and with screen readers.
 - **Edge cases handled:** deleting the last row of a page moves back a page; a stale page number (404) falls back; delete failures show inside the confirmation dialog; the cache is cleared on logout.
-
 ## What I'd improve with more time
 
-- **Server-side export.** The Excel export runs in the browser, which is fine for hundreds or a few thousand rows. For very large tables I'd move it to a backend endpoint (streamed `.xlsx` or CSV) that reuses the same filters.
-- **Tests for the export** (the paginated fetch and the workbook contents), and a Playwright E2E test for the full login → CRUD → export flow, plus coverage reporting in CI.
+**Reports and printing**
+- **Printable product report** with a print-friendly layout (`@media print`) and a PDF download.
+- **Reports page** with totals: product count, total items in stock, stock value (price × stock), and low-stock and out-of-stock counts.
+- **Category-wise report** showing items, quantity and value per category, with charts.
+- **Net total and VAT calculation** per product and per report. UAE VAT is 5%, so I'd store the rate in settings rather than hard-coding it, and show net, VAT and gross amounts.
+- **Server-side export** (CSV/XLSX) for large tables. The current Excel export runs in the browser, which is fine for hundreds or a few thousand rows.
+
+**Product details and UX**
+- **Product images**: upload on the add/edit form, thumbnails in the table and cards, with size and type validation and object storage (S3 or similar) in production.
+- **Details dialog** for each product with stock details, stock movement history and extra information, so the table stays compact.
+- **Category-wise UI**: grouped views, category badges and colours, and a category management screen with a unique product name per category.
+- **Sortable columns** (the API already supports `?ordering=`), an active/inactive filter, and filters and page saved in the URL.
+- **Cold-start feedback**: a "server is waking up" message when the free-tier API is slow to respond.
+- **Optimistic updates** for delete and edit, plus an "undo" toast.
+
+**Complete inventory workflow**
+- **Purchases**: suppliers, purchase orders and goods received, which increase stock.
+- **Sales**: customers, sales orders and invoices, which reduce stock.
+- **Finance and accounts**: payments, receivables and payables, a simple ledger, and profit and loss reports.
+- **Stock movements** as an audit trail (who changed what, when, and why) instead of editing the stock number directly.
+- **Soft delete** (or archiving via `is_active`) instead of hard delete.
+- **Roles and permissions** (viewer, editor, accountant, admin), and per-user data if this became multi-tenant.
+
+**Quality and production**
+- **Tests** for the Excel export, and a Playwright E2E test for the full login → CRUD → export flow, plus coverage reporting in CI.
 - **Token storage.** Tokens are in `localStorage`, which is simple but readable by any XSS. I'd move the refresh token to an `httpOnly`, `SameSite` cookie, and add refresh-token rotation/blacklisting on logout.
-- **Cold-start feedback.** A "server is waking up" message on the login page when the free-tier API is slow to respond.
-- **Optimistic updates** for delete/edit, plus an "undo" toast.
-- **Soft delete** (or archiving via `is_active`) instead of hard delete, and an audit trail of who changed stock.
-- **Roles/permissions** (viewer vs. editor), and per-user data if this became multi-tenant.
-- **Sortable columns** in the UI (the API already supports `?ordering=`), filter by active/inactive, and persisting filters/page in the URL.
-- **Category management UI**, and a unique constraint on product name per category.
 - **Production hardening:** HTTPS settings (HSTS, secure cookies), real secrets management, structured logging, and a health-check endpoint.
