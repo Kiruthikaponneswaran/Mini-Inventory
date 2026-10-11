@@ -77,7 +77,9 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--da
 .table tbody tr:last-child td { border-bottom: 0; }
 .table .num { text-align: right; }
 .table .cell-name { font-weight: 600; white-space: normal; }
-.actions { display: flex; gap: 6px; justify-content: flex-end; }
+/* .actions { display: flex; gap: 6px; justify-content: flex-end; } */
+.actions { text-align: right; white-space: nowrap; }
+.actions .btn + .btn { margin-left: 6px; }
 .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .75rem; font-weight: 600; background: #eef0f4; color: var(--muted); }
 .badge-ok { background: var(--ok-bg); color: var(--ok); }
 .badge-warn { background: var(--warn-bg); color: var(--warn); }
@@ -111,4 +113,5 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--da
   .table .actions .btn { flex: 1; padding: 9px; }
   .row { grid-template-columns: 1fr; }
   .user { display: none; }
+  .table .actions .btn + .btn { margin-left: 0; }
 }
