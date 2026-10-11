@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/AuthContext";
@@ -12,6 +12,17 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [slow, setSlow] = useState(false);
+
+  // If sign-in takes longer than 3 seconds, the free-tier server is probably waking up.
+  useEffect(() => {
+    if (!submitting) {
+      setSlow(false);
+      return;
+    }
+    const id = setTimeout(() => setSlow(true), 3000);
+    return () => clearTimeout(id);
+  }, [submitting]);
 
   if (isAuthenticated) return <Navigate to="/" replace />;
 
@@ -35,7 +46,13 @@ export function LoginPage() {
 
   return (
     <main className="auth-page">
-      <form className="card auth-card" onSubmit={handleSubmit} noValidate>
+      <div
+        className={`loading-bar${submitting ? " active" : ""}`}
+        role="progressbar"
+        aria-label="Signing in"
+        aria-hidden={!submitting}
+      />
+      <form className="card auth-card" onSubmit={handleSubmit} noValidate aria-busy={submitting}>
         <h1>Mini Inventory</h1>
         <p className="muted">Sign in to manage your products.</p>
 
@@ -90,7 +107,14 @@ export function LoginPage() {
           </div>
         </div>
 
-        <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
+        {slow && (
+          <div className="alert alert-info" role="status">
+            The server is waking up. This can take up to a minute on the first sign-in.
+          </div>
+        )}
+
+        <button className="btn btn-primary btn-block btn-loading" type="submit" disabled={submitting}>
+          {submitting && <span className="spinner spinner-sm" aria-hidden="true" />}
           {submitting ? "Signing in…" : "Sign in"}
         </button>
 
