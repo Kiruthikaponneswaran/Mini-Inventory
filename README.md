@@ -1,4 +1,6 @@
 # Mini Inventory System
+**Live demo:** https://mini-inventory-sigma.vercel.app (login: `demo` / `demo12345`)
+The API runs on Render's free tier, so the first request may take about a minute to wake up. Data resets on restart.
 
 A small inventory manager: **Django REST Framework** API + **React (TypeScript)** SPA.
 
