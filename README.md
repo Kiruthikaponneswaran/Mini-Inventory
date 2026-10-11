@@ -23,7 +23,7 @@ Created by the `seed` command (23 products across 6 categories). The credentials
 ## Run it
 
 ### Option A: Docker Compose (everything, one command)
-
+Verified on Windows 10 with Docker Desktop (Postgres 16, Django/gunicorn, nginx).
 ```bash
 docker compose up --build
 ```
