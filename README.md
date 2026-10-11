@@ -6,7 +6,7 @@ The API runs on Render's free tier, so the first request may take about a minute
 |-------|----------|
 | ![Login page](docs/login.webp) | ![Products page](docs/product.webp) |
 
-| Add product | Mobile |
+| Add /Update product (Mobile View)| Product (Mobile View) |
 |-------------|--------|
 | ![Add product form](docs/add.webp) | ![Mobile view](docs/mobile.webp) |
 A small inventory manager: **Django REST Framework** API + **React (TypeScript)** SPA.
