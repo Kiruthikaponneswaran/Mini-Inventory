@@ -133,4 +133,4 @@ docker-compose.yml   db (Postgres) + backend (gunicorn) + frontend (nginx)
 - **Category management UI**, and a unique constraint on product name per category.
 - **E2E tests** (Playwright) for the full login → CRUD flow, plus coverage reporting in CI.
 - **Production hardening:** HTTPS settings (HSTS, secure cookies), real secrets management, structured logging, and a health-check endpoint.
-- **Live deployment** (e.g. Render/Fly for the API + DB, static hosting for the SPA). The Compose setup is the starting point for this.
+
