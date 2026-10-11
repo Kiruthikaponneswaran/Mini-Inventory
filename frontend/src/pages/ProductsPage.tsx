@@ -12,7 +12,7 @@ import { useDebounce } from "../hooks/useDebounce";
 import { useCategories, useDeleteProduct, useProducts, useSaveProduct } from "../hooks/useProducts";
 import { getErrorMessage, getStatus } from "../lib/errors";
 import type { Product, ProductPayload } from "../types";
-
+import { exportProductsToExcel } from "../lib/exportProducts";
 export function ProductsPage() {
   const [searchInput, setSearchInput] = useState("");
   const search = useDebounce(searchInput.trim(), 400);
@@ -28,6 +28,19 @@ export function ProductsPage() {
 
   const categories = useCategories();
   const products = useProducts({ page, search, category });
+  const [exporting, setExporting] = useState(false);
+
+async function handleExport() {
+  setExporting(true);
+  try {
+    await exportProductsToExcel({ search, category });
+    setNotice("Excel file downloaded.");
+  } catch {
+    setNotice("Export failed. Please try again.");
+  } finally {
+    setExporting(false);
+  }
+}
   const save = useSaveProduct();
   const remove = useDeleteProduct();
 
@@ -112,13 +125,23 @@ export function ProductsPage() {
 
   return (
     <Layout>
-      <div className="page-head">
+      {/* <div className="page-head">
         <h1>Products</h1>
         <button className="btn btn-primary" onClick={() => setEditing("new")}>
           + Add product
         </button>
-      </div>
-
+      </div> */}
+<div className="page-head">
+  <h1>Products</h1>
+  <div className="head-actions">
+    <button className="btn" onClick={handleExport} disabled={exporting}>
+      {exporting ? "Exporting…" : "Export Excel"}
+    </button>
+    <button className="btn btn-primary" onClick={() => setEditing("new")}>
+      + Add product
+    </button>
+  </div>
+</div>
       <div className="toolbar">
         <div className="field grow">
           <label htmlFor="search" className="sr-only">

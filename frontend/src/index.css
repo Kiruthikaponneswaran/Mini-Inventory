@@ -37,6 +37,7 @@ code { background: #eef0f4; padding: 1px 6px; border-radius: 4px; }
 .topbar-right { display: flex; align-items: center; gap: 12px; }
 .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
 .page-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px;color: #ecfdf3; }
+.head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .toolbar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .grow { flex: 1 1 240px; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
