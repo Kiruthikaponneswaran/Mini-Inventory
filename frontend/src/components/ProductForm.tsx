@@ -87,7 +87,7 @@ export function ProductForm({ categories, product, onSubmit, onCancel }: Props) 
 
       <div className="row">
         <div className="field">
-          <label htmlFor="pf-price">Price (USD)</label>
+          <label htmlFor="pf-price">Price (AED)</label>
           <input id="pf-price" inputMode="decimal" placeholder="0.00" {...register("price")} {...aria("price")} />
           {fieldError("price")}
         </div>
