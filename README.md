@@ -2,7 +2,7 @@
 
 A small inventory manager: **Django REST Framework** API + **React (TypeScript)** app.
 
-**Live demo:** https://mini-inventory-sigma.vercel.app (login: `demo` / `demo12345`)
+**Live demo:** https://mini-inventory-sigma.vercel.app/login (login: `demo` / `demo12345`)
 
 > The API runs on Render's free tier, so the first sign-in may take up to a minute while the server wakes up. The login page shows progress during that time. Demo data resets on restart.
 
